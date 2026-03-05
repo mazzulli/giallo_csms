@@ -1,0 +1,169 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── NextAuth Models ───
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String
+  role          String    @default("user")
+  accounts      Account[]
+  sessions      Session[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── OTP Verification ───
+
+model VerificationCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email, code])
+}
+
+// ─── CSMS Models ───
+
+model ChargeStation {
+  id              String              @id @default(cuid())
+  identity        String              @unique
+  name            String
+  vendor          String
+  model           String
+  serialNumber    String?
+  firmwareVersion String?
+  status          ChargeStationStatus @default(OFFLINE)
+  lastHeartbeat   DateTime?
+  lastBootAt      DateTime?
+  evses           Evse[]
+  transactions    Transaction[]
+  ocppMessages    OcppMessage[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
+enum ChargeStationStatus {
+  ONLINE
+  OFFLINE
+  FAULTED
+}
+
+model Evse {
+  id              String          @id @default(cuid())
+  evseId          Int
+  chargeStationId String
+  chargeStation   ChargeStation   @relation(fields: [chargeStationId], references: [id], onDelete: Cascade)
+  connectors      Connector[]
+  status          ConnectorStatus @default(AVAILABLE)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([chargeStationId, evseId])
+}
+
+enum ConnectorStatus {
+  AVAILABLE
+  OCCUPIED
+  RESERVED
+  UNAVAILABLE
+  FAULTED
+}
+
+model Connector {
+  id          String          @id @default(cuid())
+  connectorId Int
+  evseId      String
+  evse        Evse            @relation(fields: [evseId], references: [id], onDelete: Cascade)
+  type        String
+  maxPowerKw  Float           @default(0)
+  status      ConnectorStatus @default(AVAILABLE)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([evseId, connectorId])
+}
+
+model Transaction {
+  id              String        @id @default(cuid())
+  transactionId   String        @unique
+  chargeStationId String
+  chargeStation   ChargeStation @relation(fields: [chargeStationId], references: [id])
+  evseId          Int
+  connectorId     Int?
+  idToken         String?
+  chargingState   ChargingState @default(IDLE)
+  meterStart      Float?
+  meterStop       Float?
+  energyDelivered Float?
+  startedAt       DateTime?
+  stoppedAt       DateTime?
+  stoppedReason   String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+enum ChargingState {
+  IDLE
+  EV_CONNECTED
+  CHARGING
+  SUSPENDED_EV
+  SUSPENDED_EVSE
+}
+
+model OcppMessage {
+  id              String        @id @default(cuid())
+  chargeStationId String
+  chargeStation   ChargeStation @relation(fields: [chargeStationId], references: [id])
+  direction       String
+  action          String
+  payload         Json
+  createdAt       DateTime      @default(now())
+}
