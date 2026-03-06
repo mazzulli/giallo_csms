@@ -1,34 +1,34 @@
-import { PrismaClient } from "@prisma/client"
-import { hash } from "bcryptjs"
+import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
   // Clean existing data
-  await prisma.ocppMessage.deleteMany()
-  await prisma.transaction.deleteMany()
-  await prisma.connector.deleteMany()
-  await prisma.evse.deleteMany()
-  await prisma.chargeStation.deleteMany()
-  await prisma.verificationCode.deleteMany()
-  await prisma.session.deleteMany()
-  await prisma.account.deleteMany()
-  await prisma.verificationToken.deleteMany()
-  await prisma.user.deleteMany()
+  await prisma.ocppMessage.deleteMany();
+  await prisma.transaction.deleteMany();
+  await prisma.connector.deleteMany();
+  await prisma.evse.deleteMany();
+  await prisma.chargeStation.deleteMany();
+  await prisma.verificationCode.deleteMany();
+  await prisma.session.deleteMany();
+  await prisma.account.deleteMany();
+  await prisma.verificationToken.deleteMany();
+  await prisma.user.deleteMany();
 
   // Seed admin user
-  const hashedPassword = await hash("admin123", 12)
+  const hashedPassword = await bcrypt.hash("info1978", 12);
   await prisma.user.create({
     data: {
       name: "Admin CSMS",
-      email: "admin@csms.com",
+      email: "mazzulli.danilo@gmail.com",
       password: hashedPassword,
       role: "admin",
       emailVerified: new Date(),
     },
-  })
+  });
 
-  console.log("Admin user created: admin@csms.com")
+  console.log("Admin user created.");
 
   // Seed Charge Stations
   const stations = [
@@ -47,7 +47,12 @@ async function main() {
           evseId: 1,
           status: "AVAILABLE" as const,
           connectors: [
-            { connectorId: 1, type: "Type2", maxPowerKw: 22.0, status: "AVAILABLE" as const },
+            {
+              connectorId: 1,
+              type: "Type2",
+              maxPowerKw: 22.0,
+              status: "AVAILABLE" as const,
+            },
           ],
         },
       ],
@@ -65,7 +70,12 @@ async function main() {
           evseId: 1,
           status: "UNAVAILABLE" as const,
           connectors: [
-            { connectorId: 1, type: "Type2", maxPowerKw: 22.0, status: "UNAVAILABLE" as const },
+            {
+              connectorId: 1,
+              type: "Type2",
+              maxPowerKw: 22.0,
+              status: "UNAVAILABLE" as const,
+            },
           ],
         },
       ],
@@ -85,14 +95,24 @@ async function main() {
           evseId: 1,
           status: "AVAILABLE" as const,
           connectors: [
-            { connectorId: 1, type: "CCS2", maxPowerKw: 50.0, status: "AVAILABLE" as const },
+            {
+              connectorId: 1,
+              type: "CCS2",
+              maxPowerKw: 50.0,
+              status: "AVAILABLE" as const,
+            },
           ],
         },
         {
           evseId: 2,
           status: "OCCUPIED" as const,
           connectors: [
-            { connectorId: 1, type: "Type2", maxPowerKw: 22.0, status: "OCCUPIED" as const },
+            {
+              connectorId: 1,
+              type: "Type2",
+              maxPowerKw: 22.0,
+              status: "OCCUPIED" as const,
+            },
           ],
         },
       ],
@@ -112,14 +132,24 @@ async function main() {
           evseId: 1,
           status: "AVAILABLE" as const,
           connectors: [
-            { connectorId: 1, type: "CCS2", maxPowerKw: 150.0, status: "AVAILABLE" as const },
+            {
+              connectorId: 1,
+              type: "CCS2",
+              maxPowerKw: 150.0,
+              status: "AVAILABLE" as const,
+            },
           ],
         },
         {
           evseId: 2,
           status: "AVAILABLE" as const,
           connectors: [
-            { connectorId: 1, type: "CHAdeMO", maxPowerKw: 50.0, status: "AVAILABLE" as const },
+            {
+              connectorId: 1,
+              type: "CHAdeMO",
+              maxPowerKw: 50.0,
+              status: "AVAILABLE" as const,
+            },
           ],
         },
       ],
@@ -139,7 +169,12 @@ async function main() {
           evseId: 1,
           status: "FAULTED" as const,
           connectors: [
-            { connectorId: 1, type: "Type2", maxPowerKw: 22.0, status: "FAULTED" as const },
+            {
+              connectorId: 1,
+              type: "Type2",
+              maxPowerKw: 22.0,
+              status: "FAULTED" as const,
+            },
           ],
         },
       ],
@@ -159,34 +194,44 @@ async function main() {
           evseId: 1,
           status: "AVAILABLE" as const,
           connectors: [
-            { connectorId: 1, type: "CCS2", maxPowerKw: 180.0, status: "AVAILABLE" as const },
+            {
+              connectorId: 1,
+              type: "CCS2",
+              maxPowerKw: 180.0,
+              status: "AVAILABLE" as const,
+            },
           ],
         },
         {
           evseId: 2,
           status: "AVAILABLE" as const,
           connectors: [
-            { connectorId: 1, type: "CHAdeMO", maxPowerKw: 50.0, status: "AVAILABLE" as const },
+            {
+              connectorId: 1,
+              type: "CHAdeMO",
+              maxPowerKw: 50.0,
+              status: "AVAILABLE" as const,
+            },
           ],
         },
       ],
     },
-  ]
+  ];
 
   for (const station of stations) {
-    const { evses, ...stationData } = station
+    const { evses, ...stationData } = station;
     const created = await prisma.chargeStation.create({
       data: stationData,
-    })
+    });
 
     for (const evse of evses) {
-      const { connectors, ...evseData } = evse
+      const { connectors, ...evseData } = evse;
       const createdEvse = await prisma.evse.create({
         data: {
           ...evseData,
           chargeStationId: created.id,
         },
-      })
+      });
 
       for (const connector of connectors) {
         await prisma.connector.create({
@@ -194,21 +239,21 @@ async function main() {
             ...connector,
             evseId: createdEvse.id,
           },
-        })
+        });
       }
     }
 
-    console.log(`Created station: ${station.name} (${station.identity})`)
+    console.log(`Created station: ${station.name} (${station.identity})`);
   }
 
-  console.log("Seed completed successfully!")
+  console.log("Seed completed successfully!");
 }
 
 main()
   .catch((e) => {
-    console.error(e)
-    process.exit(1)
+    console.error(e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect();
+  });

@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { neon } from "@neondatabase/serverless";
+import { PrismaClient } from "@prisma/client";
 import { ocppManager } from "@/lib/ocpp/connection-manager";
+
+const prisma = new PrismaClient();
 
 console.log("Searching for charge stations...");
 console.log(
   "Database URL:",
   process.env.DATABASE_URL ? "Provided" : "Not Provided",
 );
-
-const sql = neon(process.env.DATABASE_URL!);
 
 export async function GET() {
   const session = await auth();
@@ -24,52 +24,26 @@ export async function GET() {
 
   try {
     // Fetch all charge stations with their EVSEs and connectors
-    const stations = await sql`
-      SELECT 
-        cs.*,
-        json_agg(
-          json_build_object(
-            'id', e.id,
-            'evseId', e."evseId",
-            'chargeStationId', e."chargeStationId",
-            'status', e.status,
-            'connectors', (
-              SELECT json_agg(
-                json_build_object(
-                  'id', c.id,
-                  'connectorId', c."connectorId",
-                  'evseId', c."evseId",
-                  'type', c.type,
-                  'status', c.status
-                )
-              )
-              FROM connectors c
-              WHERE c."evseId" = e.id
-            )
-          )
-        ) FILTER (WHERE e.id IS NOT NULL) AS evses
-      FROM charge_stations cs
-      LEFT JOIN evses e ON e."chargeStationId" = cs.id
-      GROUP BY cs.id
-      ORDER BY cs."createdAt" DESC
-    `;
+    const stations = await prisma.chargeStation.findMany({
+      include: {
+        evses: {
+          include: {
+            connectors: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
+    // Calculate stats
     const total = stations.length;
-    const online = stations.filter(
-      (s: Record<string, unknown>) => s.isOnline,
-    ).length;
-    const offline = stations.filter(
-      (s: Record<string, unknown>) => !s.isOnline,
-    ).length;
-    const faulted = stations.filter((s: Record<string, unknown>) =>
-      (s.evses as Array<{ status: string }> | null)?.some(
-        (e: { status: string }) => e.status === "Faulted",
-      ),
-    ).length;
-    const charging = stations.filter((s: Record<string, unknown>) =>
-      (s.evses as Array<{ status: string }> | null)?.some(
-        (e: { status: string }) => e.status === "Occupied",
-      ),
+    const online = stations.filter((s) => s.status === "ONLINE").length;
+    const offline = stations.filter((s) => s.status === "OFFLINE").length;
+    const faulted = stations.filter((s) => s.status === "FAULTED").length;
+    const charging = stations.filter((s) =>
+      s.evses?.some((e) => e.status === "OCCUPIED"),
     ).length;
 
     return NextResponse.json({
@@ -109,10 +83,10 @@ export async function POST(request: Request) {
 
     // Check if station exists and user has permission
     if (stationId) {
-      const stations = await sql`
-        SELECT id FROM charge_stations WHERE id = ${stationId}
-      `;
-      if (stations.length === 0) {
+      const station = await prisma.chargeStation.findUnique({
+        where: { id: stationId },
+      });
+      if (!station) {
         return NextResponse.json(
           { error: "Station not found" },
           { status: 404 },
