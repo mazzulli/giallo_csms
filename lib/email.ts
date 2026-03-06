@@ -1,16 +1,16 @@
-import { Resend } from "resend"
+import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function sendVerificationEmail(
   email: string,
-  code: string
+  code: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await resend.emails.send({
-      from: "CSMS <onboarding@resend.dev>",
+      from: "Giallo Volt CSMS <no-reply@giallovolt.com.br>",
       to: email,
-      subject: `Seu codigo de verificacao: ${code}`,
+      subject: `Seu codigo de verificação: ${code}`,
       html: `
         <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 40px 20px;">
           <div style="text-align: center; margin-bottom: 32px;">
@@ -35,16 +35,16 @@ export async function sendVerificationEmail(
           </p>
         </div>
       `,
-    })
+    });
 
     if (error) {
-      console.error("Resend error:", error)
-      return { success: false, error: error.message }
+      console.error("Resend error:", error);
+      return { success: false, error: error.message };
     }
 
-    return { success: true }
+    return { success: true };
   } catch (err) {
-    console.error("Email send error:", err)
-    return { success: false, error: "Failed to send email" }
+    console.error("Email send error:", err);
+    return { success: false, error: "Failed to send email" };
   }
 }

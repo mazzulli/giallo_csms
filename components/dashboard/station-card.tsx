@@ -72,6 +72,7 @@ function formatTimeAgo(date: string | null): string {
 
 export function StationCard({ station, onAction }: StationCardProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null)
+  const [transactionId, setTransactionId] = useState<string | null>(null)
 
   const evse = station.evses?.[0]
   const connector = evse?.connectors?.[0]
@@ -84,14 +85,40 @@ export function StationCard({ station, onAction }: StationCardProps) {
   async function handleAction(action: "start" | "stop") {
     setLoadingAction(action)
     try {
+      const body: Record<string, unknown> = { action, evseId: evse?.evseId ?? 1 }
+      
+      // Include transactionId for stop action
+      if (action === "stop" && transactionId) {
+        body.transactionId = transactionId
+      }
+
+      console.log(`[STATION-CARD] ${action.toUpperCase()} - Body:`, JSON.stringify(body))
+      console.log(`[STATION-CARD] ${action.toUpperCase()} - Current transactionId state:`, transactionId)
+
       const res = await fetch(`/api/stations/${station.id}/command`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, evseId: evse?.evseId ?? 1 }),
+        body: JSON.stringify(body),
       })
 
       if (res.ok) {
+        const data = await res.json()
+        console.log(`[STATION-CARD] ${action.toUpperCase()} - Response:`, JSON.stringify(data, null, 2))
+        
+        // Store transactionId from start response
+        if (action === "start" && data.result?.transactionId) {
+          console.log(`[STATION-CARD] ${action.toUpperCase()} - Found transactionId:`, data.result.transactionId)
+          setTransactionId(data.result.transactionId)
+        }
+        // Clear transactionId after stop
+        if (action === "stop") {
+          setTransactionId(null)
+        }
+        
         onAction()
+      } else {
+        const errorData = await res.json()
+        console.error(`[STATION-CARD] ${action.toUpperCase()} - Error (${res.status}):`, JSON.stringify(errorData))
       }
     } catch (err) {
       console.error("Command error:", err)

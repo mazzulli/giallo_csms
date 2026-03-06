@@ -1,0 +1,66 @@
+
+> my-project@0.1.0 dev H:\Empresas - Grupo Mazzulli\SSIT Consulting\TI\Dev\GialloVolt\GialloCSMS
+> tsx server.ts
+
+Initializing OCPP Connection Manager...
+Database URL: Not Provided
+[dotenv@17.3.1] injecting env (9) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[SERVER] Initializing custom HTTP server...
+[SERVER] ✅ CSMS Server ready on http://0.0.0.0:3000
+[SERVER] ✅ OCPP 2.0.1 WebSocket endpoint: ws://0.0.0.0:3000/ocpp/{identity}
+[UPGRADE] Upgrade request for: /ocpp/WEG-002
+[OCPP Server] Connection attempt - Identity: WEG-002, Protocols: ocpp2.0.1
+TypeError: Cannot set property protocol of #<WebSocket> which has only a getter
+    at <unknown> (server.ts:53:52)
+    at Server.<anonymous> (server.ts:50:11)
+⨯ uncaughtException: TypeError: Cannot set property protocol of #<WebSocket> which has only a getter
+    at <unknown> (server.ts:53:52)
+    at Server.<anonymous> (server.ts:50:11)
+⨯ uncaughtException:  TypeError: Cannot set property protocol of #<WebSocket> which has only a getter
+    at <unknown> (server.ts:53:52)
+    at Server.<anonymous> (server.ts:50:11)
+[UPGRADE] Upgrade request for: /_next/webpack-hmr?id=wYDVQxCg70eO6B2y1LGbv
+[UPGRADE] Upgrade request for: /ocpp/INTELBRAS-001
+[OCPP Server] Connection attempt - Identity: INTELBRAS-001, Protocols: ocpp2.0.1
+TypeError: Cannot set property protocol of #<WebSocket> which has only a getter
+    at <unknown> (server.ts:53:52)
+    at Server.<anonymous> (server.ts:50:11)
+⨯ uncaughtException: TypeError: Cannot set property protocol of #<WebSocket> which has only a getter
+    at <unknown> (server.ts:53:52)
+    at Server.<anonymous> (server.ts:50:11)
+⨯ uncaughtException:  TypeError: Cannot set property protocol of #<WebSocket> which has only a getter
+    at <unknown> (server.ts:53:52)
+    at Server.<anonymous> (server.ts:50:11)
+Initializing OCPP Connection Manager...
+Database URL: Provided
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ⚡️ secrets for agents: https://dotenvx.com/as2
+Searching for charge stations...
+Database URL: Provided
+ENTREI.... Buscando estações para o usuário: mazzulli.danilo@gmail.com
+ GET /api/stations 200 in 467ms (compile: 354ms, render: 114ms)
+ENTREI.... Buscando estações para o usuário: mazzulli.danilo@gmail.com
+ GET /api/stations 200 in 232ms (compile: 21ms, render: 211ms)
+Initializing OCPP Connection Manager...
+Database URL: Provided
+[dotenv@17.3.1] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+[COMMAND] Station: 0b0066f4-3142-43d5-8f72-3b6ab609eaae, Command: RequestStartTransaction, Params: { evseId: 1 }
+[COMMAND] Station identity retrieved: INTELBRAS-001
+[COMMAND] Station connected check for identity "INTELBRAS-001": false
+[COMMAND] All connected stations: []
+[COMMAND] Error: Station INTELBRAS-001 is not connected to CSMS
+ POST /api/stations/0b0066f4-3142-43d5-8f72-3b6ab609eaae/command 503 in 2.9s (compile: 2.9s, render: 62ms)
+ENTREI.... Buscando estações para o usuário: mazzulli.danilo@gmail.com
+ GET /api/stations 200 in 34ms (compile: 7ms, render: 27ms)
+[COMMAND] Station: 29e69897-8281-4e0b-996d-388ac9b5fa07, Command: RequestStartTransaction, Params: { evseId: 1 }
+[COMMAND] Station identity retrieved: WEG-002
+[COMMAND] Station connected check for identity "WEG-002": false
+[COMMAND] All connected stations: []
+[COMMAND] Error: Station WEG-002 is not connected to CSMS
+ POST /api/stations/29e69897-8281-4e0b-996d-388ac9b5fa07/command 503 in 90ms (compile: 29ms, render: 61ms)
+Initializing OCPP Connection Manager...
+Database URL: Provided
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🤖 agentic secret storage: https://dotenvx.com/as2
+ENTREI.... Buscando estações para o usuário: mazzulli.danilo@gmail.com
+ GET /api/stations 200 in 64ms (compile: 12ms, render: 51ms)
+ENTREI.... Buscando estações para o usuário: mazzulli.danilo@gmail.com
+ GET /api/stations 200 in 73ms (compile: 11ms, render: 62ms)

@@ -17,6 +17,18 @@ import {
   type TransactionEventResponse,
   type RequestStartTransactionRequest,
   type RequestStopTransactionRequest,
+  type ResetRequest,
+  type ResetResponse,
+  type ChangeAvailabilityRequest,
+  type ChangeAvailabilityResponse,
+  type UnlockConnectorRequest,
+  type UnlockConnectorResponse,
+  type GetVariablesRequest,
+  type GetVariablesResponse,
+  type SetVariablesRequest,
+  type SetVariablesResponse,
+  type TriggerMessageRequest,
+  type TriggerMessageResponse,
 } from "./types";
 import path from "path";
 
@@ -474,6 +486,106 @@ class OcppConnectionManager {
     );
   }
 
+  async reset(
+    identity: string,
+    type: "Hard" | "Soft" = "Soft",
+  ): Promise<ResetResponse> {
+    const payload: ResetRequest = { type };
+    return this.sendCommand(
+      identity,
+      "Reset",
+      payload as unknown as Record<string, unknown>,
+    ) as Promise<ResetResponse>;
+  }
+
+  async changeAvailability(
+    identity: string,
+    operational: boolean,
+    evseId?: number,
+  ): Promise<ChangeAvailabilityResponse> {
+    const payload: ChangeAvailabilityRequest = {
+      operational,
+      evseId,
+    };
+    return this.sendCommand(
+      identity,
+      "ChangeAvailability",
+      payload as unknown as Record<string, unknown>,
+    ) as Promise<ChangeAvailabilityResponse>;
+  }
+
+  async unlockConnector(
+    identity: string,
+    evseId?: number,
+    connectorId?: number,
+  ): Promise<UnlockConnectorResponse> {
+    const payload: UnlockConnectorRequest = {
+      evseId,
+      connectorId,
+    };
+    return this.sendCommand(
+      identity,
+      "UnlockConnector",
+      payload as unknown as Record<string, unknown>,
+    ) as Promise<UnlockConnectorResponse>;
+  }
+
+  async getVariables(
+    identity: string,
+    getVariableData: Array<{
+      attributeType?: "Actual" | "Target" | "MinSet" | "MaxSet";
+      component?: { name: string; instance?: string };
+      variable?: { name: string; instance?: string };
+    }>,
+  ): Promise<GetVariablesResponse> {
+    const payload: GetVariablesRequest = { getVariableData };
+    return this.sendCommand(
+      identity,
+      "GetVariables",
+      payload as unknown as Record<string, unknown>,
+    ) as Promise<GetVariablesResponse>;
+  }
+
+  async setVariables(
+    identity: string,
+    setVariableData: Array<{
+      attributeType?: "Target" | "MinSet" | "MaxSet";
+      attributeValue: string;
+      component: { name: string; instance?: string };
+      variable: { name: string; instance?: string };
+    }>,
+  ): Promise<SetVariablesResponse> {
+    const payload: SetVariablesRequest = { setVariableData };
+    return this.sendCommand(
+      identity,
+      "SetVariables",
+      payload as unknown as Record<string, unknown>,
+    ) as Promise<SetVariablesResponse>;
+  }
+
+  async triggerMessage(
+    identity: string,
+    requestedMessage:
+      | "BootNotification"
+      | "LogStatusNotification"
+      | "FirmwareStatusNotification"
+      | "Heartbeat"
+      | "MeterValues"
+      | "SignChargingStationCertificate"
+      | "StatusNotification",
+    evseId?: number,
+  ): Promise<TriggerMessageResponse> {
+    const payload: TriggerMessageRequest = {
+      requestedMessage,
+      evseId,
+    };
+    return this.sendCommand(
+      identity,
+      "TriggerMessage",
+      payload as unknown as Record<string, unknown>,
+    ) as Promise<TriggerMessageResponse>;
+  }
+
   private async logMessage(
     stationId: string | null,
     messageId: string,
@@ -493,5 +605,19 @@ class OcppConnectionManager {
   }
 }
 
-// Singleton instance
-export const ocppManager = new OcppConnectionManager();
+// Singleton pattern that survives HMR reloads
+declare global {
+  var __ocppManagerInstance: OcppConnectionManager | undefined;
+}
+
+function getOcppManager(): OcppConnectionManager {
+  if (!globalThis.__ocppManagerInstance) {
+    console.log("[OCPP Manager] Creating new singleton instance");
+    globalThis.__ocppManagerInstance = new OcppConnectionManager();
+  } else {
+    console.log("[OCPP Manager] Reusing existing singleton instance");
+  }
+  return globalThis.__ocppManagerInstance;
+}
+
+export const ocppManager = getOcppManager();
